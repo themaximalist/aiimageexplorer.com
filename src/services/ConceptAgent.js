@@ -1,5 +1,5 @@
 module.exports = async function ConceptAgent(input) {
-    const AI = (await import("@themaximalist/ai.js")).default;
+    const LLM = (await import("@themaximalist/llm.js")).default;
 
     let input_prompt = "";
     if (typeof input === "string") {
@@ -67,16 +67,16 @@ Please now output only the JSON:
 `.trim();
 
     try {
-        const concept = JSON.parse(await AI(prompt, {
-            parser: AI.parsers.codeBlock("json"),
+        const concept = await LLM(prompt, {
+            json: true,
             service: process.env.AI_SERVICE,
             model: process.env.AI_MODEL,
-        }));
-        console.log("CONCEPT", concept);
+        });
+        // console.log("CONCEPT", concept);
         if (!concept.style) throw new Error('No style found');
         if (!concept.prompt) throw new Error('No prompt found');
 
-        console.log("CONCEPT", concept);
+        // console.log("CONCEPT", concept);
         return {
             style: concept.style,
             prompt: concept.prompt

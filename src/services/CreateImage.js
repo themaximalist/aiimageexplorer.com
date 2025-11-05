@@ -1,8 +1,26 @@
 const { Concept, Result } = require("../models");
 const { saveBufferToImage } = require("../utils");
 
+const Replicate = require("replicate");
+
+async function Imagine(prompt, options) {
+    const replicate = new Replicate({
+        auth: process.env.REPLICATE_API_KEY,
+    });
+    const output = await replicate.run(
+        "black-forest-labs/flux-schnell",
+        {
+            input: { prompt, style_preset: options.style_preset },
+        }
+    );
+    const url = output[0].toString();
+
+    const buffer = await fetch(url).then(res => res.arrayBuffer());
+    return buffer;
+}
+
 module.exports = async function CreateImage(concept_id, result_id) {
-    const AI = (await import("@themaximalist/ai.js")).default;
+    // const AI = (await import("@themaximalist/ai.js")).default;
 
     try {
         if (!concept_id) throw new Error('No concept_id provided');
@@ -13,13 +31,12 @@ module.exports = async function CreateImage(concept_id, result_id) {
 
         const options = {
             service: "replicate",
-            model: "black-forest-labs/flux-schnell",
+            model: "bytedance/seedream-3",
+            // model: "black-forest-labs/flux-schnell",
             style_preset: concept.style,
-            // seed: 55555,
         };
 
-        const buffer = await AI.Imagine(concept.prompt, options)
-        options.model = "black-forest-labs/flux-schnell"; // bug
+        const buffer = await Imagine(concept.prompt, options);
         const image_url = await saveBufferToImage(buffer);
         const thumbnail_url = await saveBufferToImage(buffer, 200);
 
